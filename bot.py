@@ -5,7 +5,6 @@ import time
 import threading
 
 TOKEN = "8742437806:AAG7AxjpVPGC0IFD4sZi8IB5qzPFI-O4VJw"
-
 CHAT_ID = "7041918034"
 
 keywords = [
@@ -22,32 +21,13 @@ keywords = [
 
 sent_links = set()
 
-# ---------------- START COMMAND ---------------- #
 
 def start(update, context):
 
-    msg = """
-✅ Tender Bot Active
-
-Commands:
-
-/search pest control
-/search housekeeping
-/search manpower
-/search facility management
-"""
-
-    update.message.reply_text(msg)
-
-# ---------------- HELP COMMAND ---------------- #
-
-def help_command(update, context):
-
     update.message.reply_text(
-        "Use:\n/search pest control"
+        "✅ Tender Bot Active\n\nUse:\n/search pest control"
     )
 
-# ---------------- MANUAL SEARCH ---------------- #
 
 def search(update, context):
 
@@ -86,11 +66,9 @@ def search(update, context):
 
         for link in links:
 
-            text = link.get_text(
-                strip=True
-            )
-
             href = link.get("href")
+
+            text = link.get_text(strip=True)
 
             if not href:
                 continue
@@ -103,20 +81,12 @@ def search(update, context):
                 )
 
                 results.append(
-                    f"""
-🚨 TENDER FOUND
-
-{text}
-
-{full_link}
-"""
+                    f"{text}\n{full_link}"
                 )
 
         if results:
 
-            final = "\n\n".join(
-                results[:10]
-            )
+            final = "\n\n".join(results[:10])
 
             update.message.reply_text(
                 final[:4000]
@@ -130,11 +100,8 @@ def search(update, context):
 
     except Exception as e:
 
-        update.message.reply_text(
-            str(e)
-        )
+        update.message.reply_text(str(e))
 
-# ---------------- AUTO ALERT SYSTEM ---------------- #
 
 def auto_check(bot):
 
@@ -145,8 +112,7 @@ def auto_check(bot):
             url = "https://bidplus.gem.gov.in/all-bids"
 
             headers = {
-                "User-Agent":
-                "Mozilla/5.0"
+                "User-Agent": "Mozilla/5.0"
             }
 
             response = requests.get(
@@ -165,3 +131,75 @@ def auto_check(bot):
             for link in links:
 
                 href = link.get("href")
+
+                text = link.get_text(strip=True)
+
+                if not href:
+                    continue
+
+                full_link = (
+                    "https://bidplus.gem.gov.in"
+                    + href
+                )
+
+                text_lower = text.lower()
+
+                for keyword in keywords:
+
+                    if keyword in text_lower:
+
+                        if full_link not in sent_links:
+
+                            sent_links.add(full_link)
+
+                            msg = f"""
+🚨 NEW TENDER ALERT
+
+Keyword:
+{keyword}
+
+Title:
+{text}
+
+Link:
+{full_link}
+"""
+
+                            bot.send_message(
+                                chat_id=CHAT_ID,
+                                text=msg[:4000]
+                            )
+
+        except Exception as e:
+
+            print(e)
+
+        time.sleep(30)
+
+
+updater = Updater(
+    TOKEN,
+    use_context=True
+)
+
+dp = updater.dispatcher
+
+dp.add_handler(
+    CommandHandler("start", start)
+)
+
+dp.add_handler(
+    CommandHandler("search", search)
+)
+
+threading.Thread(
+    target=auto_check,
+    args=(updater.bot,),
+    daemon=True
+).start()
+
+print("🚀 Tender Bot Started")
+
+updater.start_polling()
+
+updater.idle()
