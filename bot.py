@@ -164,4 +164,4 @@ def auto_check(bot):
 
             for link in links:
 
-                href = link.get("
+                href = link.get("href")
