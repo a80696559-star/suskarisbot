@@ -3,6 +3,11 @@ import requests
 from bs4 import BeautifulSoup
 import time
 import threading
+import urllib3
+
+urllib3.disable_warnings(
+    urllib3.exceptions.InsecureRequestWarning
+)
 
 TOKEN = "8742437806:AAG7AxjpVPGC0IFD4sZi8IB5qzPFI-O4VJw"
 CHAT_ID = "7041918034"
@@ -43,7 +48,7 @@ def search(update, context):
 
     try:
 
-        url = "https://bidplus.gem.gov.in/all-bids"
+        url = "https://bidplus.gem.gov.in/all-bids?sort=Bid-End-Date&page=1"
 
         headers = {
     "User-Agent": (
@@ -56,11 +61,14 @@ def search(update, context):
     "Referer": "https://www.google.com/"
 }
 
-        response = requests.get(
-            url,
-            headers=headers,
-            timeout=20
-        )
+        session = requests.Session()
+
+response = session.get(
+    url,
+    headers=headers,
+    timeout=30,
+    verify=False
+)
 
         soup = BeautifulSoup(
             response.text,
