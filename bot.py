@@ -1,7 +1,8 @@
-from telegram.ext import Updater
+from telegram.ext import Updater, CommandHandler
 import requests
 from bs4 import BeautifulSoup
 import time
+import threading
 
 TOKEN = "8742437806:AAG7AxjpVPGC0IFD4sZi8IB5qzPFI-O4VJw"
 
@@ -15,41 +16,57 @@ keywords = [
     "sanitation",
     "electrical",
     "operation and maintenance",
-    "amc"
+    "amc",
+    "service"
 ]
 
 sent_links = set()
 
-def send_message(bot, text):
+# ---------------- START COMMAND ---------------- #
 
-    try:
-        bot.send_message(
-            chat_id=CHAT_ID,
-            text=text
+def start(update, context):
+
+    msg = """
+✅ Tender Bot Active
+
+Commands:
+
+/search pest control
+/search housekeeping
+/search manpower
+/search facility management
+"""
+
+    update.message.reply_text(msg)
+
+# ---------------- HELP COMMAND ---------------- #
+
+def help_command(update, context):
+
+    update.message.reply_text(
+        "Use:\n/search pest control"
+    )
+
+# ---------------- MANUAL SEARCH ---------------- #
+
+def search(update, context):
+
+    keyword = " ".join(context.args)
+
+    if not keyword:
+
+        update.message.reply_text(
+            "Use:\n/search pest control"
         )
 
-    except Exception as e:
-        print(e)
-
-
-updater = Updater(TOKEN, use_context=True)
-
-bot = updater.bot
-
-send_message(
-    bot,
-    "🚀 Tender Bot Started Successfully"
-)
-
-while True:
+        return
 
     try:
 
         url = "https://bidplus.gem.gov.in/all-bids"
 
         headers = {
-            "User-Agent":
-            "Mozilla/5.0"
+            "User-Agent": "Mozilla/5.0"
         }
 
         response = requests.get(
@@ -65,54 +82,86 @@ while True:
 
         links = soup.find_all("a")
 
-        for link in links:
+        results = []
 
-            href = link.get("href")
+        for link in links:
 
             text = link.get_text(
                 strip=True
             )
 
+            href = link.get("href")
+
             if not href:
                 continue
 
-            full_link = (
-                "https://bidplus.gem.gov.in"
-                + href
-            )
+            if keyword.lower() in text.lower():
 
-            text_lower = text.lower()
+                full_link = (
+                    "https://bidplus.gem.gov.in"
+                    + href
+                )
 
-            for keyword in keywords:
+                results.append(
+                    f"""
+🚨 TENDER FOUND
 
-                if keyword in text_lower:
-
-                    if full_link not in sent_links:
-
-                        sent_links.add(full_link)
-
-                        msg = f"""
-🚨 NEW TENDER ALERT
-
-Keyword:
-{keyword}
-
-Title:
 {text}
 
-Link:
 {full_link}
 """
+                )
 
-                        send_message(
-                            bot,
-                            msg[:4000]
-                        )
+        if results:
 
-        print("Checked")
+            final = "\n\n".join(
+                results[:10]
+            )
+
+            update.message.reply_text(
+                final[:4000]
+            )
+
+        else:
+
+            update.message.reply_text(
+                "No tender found."
+            )
 
     except Exception as e:
 
-        print(e)
+        update.message.reply_text(
+            str(e)
+        )
 
-    time.sleep(30)
+# ---------------- AUTO ALERT SYSTEM ---------------- #
+
+def auto_check(bot):
+
+    while True:
+
+        try:
+
+            url = "https://bidplus.gem.gov.in/all-bids"
+
+            headers = {
+                "User-Agent":
+                "Mozilla/5.0"
+            }
+
+            response = requests.get(
+                url,
+                headers=headers,
+                timeout=20
+            )
+
+            soup = BeautifulSoup(
+                response.text,
+                "html.parser"
+            )
+
+            links = soup.find_all("a")
+
+            for link in links:
+
+                href = link.get("
