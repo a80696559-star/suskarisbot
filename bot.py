@@ -5,7 +5,7 @@ import time
 
 TOKEN = "8742437806:AAG7AxjpVPGC0IFD4sZi8IB5qzPFI-O4VJw"
 
-CHAT_ID = "YAHAN_CHAT_ID"
+CHAT_ID = "7041918034"
 
 keywords = [
     "housekeeping",
