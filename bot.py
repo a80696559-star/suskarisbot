@@ -10,6 +10,7 @@ urllib3.disable_warnings(
 )
 
 TOKEN = "8742437806:AAG7AxjpVPGC0IFD4sZi8IB5qzPFI-O4VJw"
+
 CHAT_ID = "7041918034"
 
 keywords = [
@@ -27,12 +28,25 @@ keywords = [
 sent_links = set()
 
 
+# ---------------- START ---------------- #
+
 def start(update, context):
 
     update.message.reply_text(
-        "✅ Tender Bot Active\n\nUse:\n/search pest control"
+        """
+✅ Tender Bot Active
+
+Commands:
+
+/search pest control
+/search housekeeping
+/search manpower
+/search facility management
+"""
     )
 
+
+# ---------------- SEARCH ---------------- #
 
 def search(update, context):
 
@@ -51,24 +65,24 @@ def search(update, context):
         url = "https://bidplus.gem.gov.in/all-bids?sort=Bid-End-Date&page=1"
 
         headers = {
-    "User-Agent": (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-        "AppleWebKit/537.36 "
-        "(KHTML, like Gecko) "
-        "Chrome/122.0.0.0 Safari/537.36"
-    ),
-    "Accept-Language": "en-US,en;q=0.9",
-    "Referer": "https://www.google.com/"
-}
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 "
+                "(KHTML, like Gecko) "
+                "Chrome/122.0.0.0 Safari/537.36"
+            ),
+            "Accept-Language": "en-US,en;q=0.9",
+            "Referer": "https://www.google.com/"
+        }
 
         session = requests.Session()
 
-response = session.get(
-    url,
-    headers=headers,
-    timeout=30,
-    verify=False
-)
+        response = session.get(
+            url,
+            headers=headers,
+            timeout=30,
+            verify=False
+        )
 
         soup = BeautifulSoup(
             response.text,
@@ -96,7 +110,13 @@ response = session.get(
                 )
 
                 results.append(
-                    f"{text}\n{full_link}"
+                    f"""
+🚨 TENDER FOUND
+
+{text}
+
+{full_link}
+"""
                 )
 
         if results:
@@ -118,22 +138,34 @@ response = session.get(
         update.message.reply_text(str(e))
 
 
+# ---------------- AUTO CHECK ---------------- #
+
 def auto_check(bot):
 
     while True:
 
         try:
 
-            url = "https://bidplus.gem.gov.in/all-bids"
+            url = "https://bidplus.gem.gov.in/all-bids?sort=Bid-End-Date&page=1"
 
             headers = {
-                "User-Agent": "Mozilla/5.0"
+                "User-Agent": (
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                    "AppleWebKit/537.36 "
+                    "(KHTML, like Gecko) "
+                    "Chrome/122.0.0.0 Safari/537.36"
+                ),
+                "Accept-Language": "en-US,en;q=0.9",
+                "Referer": "https://www.google.com/"
             }
 
-            response = requests.get(
+            session = requests.Session()
+
+            response = session.get(
                 url,
                 headers=headers,
-                timeout=20
+                timeout=30,
+                verify=False
             )
 
             soup = BeautifulSoup(
@@ -189,8 +221,10 @@ Link:
 
             print(e)
 
-        time.sleep(30)
+        time.sleep(60)
 
+
+# ---------------- MAIN ---------------- #
 
 updater = Updater(
     TOKEN,
@@ -213,7 +247,12 @@ threading.Thread(
     daemon=True
 ).start()
 
-print("🚀 Tender Bot Started")
+print("🚀 Tender Bot Started Successfully")
+
+updater.bot.send_message(
+    chat_id=CHAT_ID,
+    text="🚀 Tender Bot Started Successfully"
+)
 
 updater.start_polling()
 
