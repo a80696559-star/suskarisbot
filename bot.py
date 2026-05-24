@@ -33,7 +33,16 @@ async def start(
     )
 
 
-def run_bot():
+async def help_command(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE
+):
+    await update.message.reply_text(
+        "/start\n/help"
+    )
+
+
+def main():
 
     application = (
         Application.builder()
@@ -45,14 +54,19 @@ def run_bot():
         CommandHandler("start", start)
     )
 
-    print("BOT STARTED")
+    application.add_handler(
+        CommandHandler("help", help_command)
+    )
+
+    print("BOT STARTED ✅")
+
+    Thread(
+        target=run_web,
+        daemon=True
+    ).start()
 
     application.run_polling()
 
 
-Thread(
-    target=run_web,
-    daemon=True
-).start()
-
-run_bot()
+if __name__ == "__main__":
+    main()
